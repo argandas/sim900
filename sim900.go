@@ -1,23 +1,10 @@
 package sim900
 
 import (
+	"errors"
 	"fmt"
-	"https://github.com/argandas/serial"
-)
-
-const (
-	CMD_ERROR_REGEXP string = "(^ERROR$)"
-	CMD_OK_REGEXP string = "(^OK$)"
-	CMD_AT string = "AT"
-	CMD_CMGF string = "AT+CMGF=1"
-	CMD_CMGS string = "AT+CMGS=\"%s\""
-	CMD_CTRL_Z string = "\x1A"
-	CMD_CMGS_RX_REGEXP string = "(^[+]CMGS[:] [0-9]+$)"
-	CMD_CMTI_REGEXP string = "(^[+]CMTI[:] \"SM\",[0-9]+$)" 
-	CMD_CMTI_RX string = "+CMTI: \"SM\","
-	CMD_CMGR string = "AT+CMGR=%s"
-	CMD_CMGR_REGEXP string = "(^[+]CMGR[:] .*)" 
-	CMD_CMGR_RX string = "+CMGR: "
+	"github.com/argandas/serial"
+	"time"
 )
 
 /*******************************************************************************************
@@ -25,95 +12,112 @@ const (
 *******************************************************************************************/
 
 type SIM900 struct {
-	port serial.Serial
+	port serial.SerialPort
 }
-
-var(
-	GSM_portOpen bool = false
-	GSM_sp sp_config_t
-)
 
 /*******************************************************************************************
 ********************************   GSM: BASIC FUNCTIONS  ***********************************
 *******************************************************************************************/
 
 func New() SIM900 {
-	return SIM900 {
+	return SIM900{
 		port: serial.New(),
 	}
 }
 
-func (sim *SIM900) Setup(name string, br uint32) error {	
-	
+func (sim *SIM900) Setup(name string, baud int) error {
+	return sim.port.Open(name, baud, time.Millisecond*100)
 }
 
-func (sim *SIM900) Teardown() error {	
-	
+func (sim *SIM900) Teardown() error {
+	return sim.port.Close()
+}
+
+func (sim *SIM900) echo(data, echo string) error {
+	err := sim.Ping()
+	if err != nil {
+		return err
+	} else {
+		err := sim.port.Println(data)
+		if err != nil {
+			return err
+		} else {
+			_, err := sim.port.WaitForRegexTimeout(echo, time.Second*1)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // Send a SMS
-func (sim *SIM900) SendSMS(number, msg string) (err error) {	
-	mode := sim.mode()
-	if mode == MODE_SMS {
+func (sim *SIM900) SendSMS(number, msg string) error {
+	err := sim.echo(CMD_CMGF, CMD_OK)
+	if err != nil {
+		return err
+	} else {
 		cmd := fmt.Sprintf(CMD_CMGS, number)
-		e := sim.port.Print(cmd)
-		if e !=  nil {
-			err = errors.New("CMD ERROR: " + cmd + " >> " + e.Error())
+		err := sim.echo(cmd, ">")
+		if err != nil {
+			return errors.New("CMD ERROR: " + cmd + " >> " + err.Error())
 		} else {
-			str, e := sim.port.WaitForRegexTimeout(CMD_ERROR_REGEXP, time.Second * 1 )
-			if e !=  nil {
-				err = errors.New("CMD ERROR: " + cmd + " >> " + e.Error())
+			cmd := msg + CMD_CTRL_Z
+			err := sim.echo(cmd, CMD_OK)
+			if err != nil {
+				return errors.New("CMD ERROR: " + cmd + " >> " + err.Error())
 			} else {
-				cmd := msg + CMD_CTRL_Z
-				e := sim.port.Print(cmd)
-				if e != nil {
-					err = errors.New("CMD ERROR: " + cmd + " >> " + e.Error())
-				} else {
-					str, e := sim.port.WaitForRegexTimeout(CMD_CMGS_RX_REGEXP + "|" + CMD_ERROR_REGEXP, time.Second * 10 )
-					if e != nil {
-						err = errors.New("CMD ERROR: " + cmd + " >> " + e.Error())
-					} else {
-						// Check if there is an update in progress
-						error, _  := regexp.Match("ERROR", []byte(str))
-						if !error {
-							echo = str
-						} else {
-							// Wait for update to be done
-							err = errors.New("CMD ERROR: " + cmd + " >> " + str)
-						}
-					}
+				_, err := sim.port.WaitForRegexTimeout(CMD_CMGS_RX_REGEXP, time.Second*5)
+				if err != nil {
+					return errors.New("CMD ERROR: " + err.Error())
 				}
 			}
 		}
 	}
+	return nil
 }
 
 // Wait for a new SMS to come
-func (sim *SIM900) WaitSMS(timeout time.Duration) error {	
-	
+func (sim *SIM900) WaitSMS(timeout time.Duration) (string, error) {
+	err := sim.echo(CMD_CMGF, CMD_OK)
+	if err != nil {
+		return "", err
+	} else {
+		data, err := sim.port.WaitForRegexTimeout(CMD_CMTI_REGEXP, timeout)
+		if err != nil {
+			return "", errors.New("CMD ERROR: " + err.Error())
+		} else {
+			if len(data) > len(CMD_CMTI_RX) {
+				return data[len(CMD_CMTI_RX):], nil
+			}
+		}
+	}
+	return "", nil
 }
 
 // Read SMS by ID
-func (sim *SIM900) ReadSMS(id string) error {	
-	
+func (sim *SIM900) ReadSMS(id string) (string, error) {
+	err := sim.echo(CMD_CMGF, CMD_OK)
+	if err != nil {
+		return "", err
+	} else {
+		cmd := fmt.Sprintf(CMD_CMGR, id)
+		err := sim.echo(cmd, CMD_CMGR_REGEXP)
+		if err != nil {
+			return "", err
+		} else {
+			return sim.port.ReadLine()
+		}
+	}
+	return "", nil
 }
 
 // Check if there are unread SMS
-func (sim *SIM900) UnreadSMS() bool {	
-	
+func (sim *SIM900) UnreadSMS() bool {
+	return false
 }
 
 // Ping modem
-func (sim *SIM900) Ping() error {	
-	
-}
-
-// Check check current mode
-func (sim *SIM900) getMode() Mode {	
-	
-}
-
-// Set modem mode
-func (sim *SIM900) setMode(mode Mode) error {	
-	
+func (sim *SIM900) Ping() error {
+	return sim.echo(CMD_AT, CMD_OK)
 }
