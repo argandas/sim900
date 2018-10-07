@@ -17,6 +17,7 @@ const (
 	CMD_CMGR           string = "AT+CMGR=%s"
 	CMD_CMGR_REGEXP    string = "(^[+]CMGR[:] .*)"
 	CMD_CMGR_RX        string = "+CMGR: "
+	CMD_CMGL_ALL       string = "AT+CMGL=\"ALL\""
 	CMD_CMTI_REGEXP    string = "(^[+]CMTI[:] \"SM\",[0-9]+$)"
 	CMD_CMTI_RX        string = "+CMTI: \"SM\","
 )

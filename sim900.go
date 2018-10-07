@@ -115,6 +115,21 @@ func (s *SIM900) WaitSMS(timeout time.Duration) (id string, err error) {
 	return
 }
 
+// ReadAllSMS retrieves all SMS text
+func (s *SIM900) ReadAllSMS() (msg string, err error) {
+	// Set message format
+	if err := s.SetSMSMode(TEXT_MODE); err != nil {
+		return "", err
+	}
+	// Send command
+	cmd := fmt.Sprintf(CMD_CMGL_ALL)
+	if _, err := s.wait4response(cmd, CMD_CMGR_REGEXP, time.Second*5); err != nil {
+		return "", err
+	}
+	// Reading succesful get message data
+	return s.port.ReadLine()
+}
+
 // ReadSMS retrieves SMS text from inbox memory by ID.
 func (s *SIM900) ReadSMS(id string) (msg string, err error) {
 	// Set message format
