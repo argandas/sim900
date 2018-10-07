@@ -3,7 +3,7 @@ package sim900
 import (
 	"errors"
 	"fmt"
-	"github.com/argandas/serial"
+	"github.com/onetimepassword/serial"
 	"log"
 	"os"
 	"strings"
