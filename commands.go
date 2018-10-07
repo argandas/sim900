@@ -20,6 +20,8 @@ const (
 	CMD_CMGL_ALL       string = "AT+CMGL=\"ALL\""
 	CMD_CMTI_REGEXP    string = "(^[+]CMTI[:] \"SM\",[0-9]+$)"
 	CMD_CMTI_RX        string = "+CMTI: \"SM\","
+	CMD_CUSD           string = "AT+CUSD=1,\"%s\",15"
+	CMD_CUSD_REGEXP    string = "(?m)(^[+]CUSD[:] [0-9]+,[| ]\"[\\s\\S:]*?.*?\", [0-9]+)"
 )
 
 // SMS Message Format

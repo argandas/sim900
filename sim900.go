@@ -130,6 +130,18 @@ func (s *SIM900) ReadAllSMS() (msg string, err error) {
 	return s.port.ReadLine()
 }
 
+// Request a USSD message
+func (s *SIM900) RequestCUSD(short string) (msg string, err error) {
+	// Send command
+	cmd := fmt.Sprintf(CMD_CUSD, short)
+	if response, err := s.wait4response(cmd, CMD_CUSD_REGEXP, time.Second*10); err != nil {
+		return "", err
+	} else {
+		return response, nil
+	}
+	// Reading succesful get message data
+}
+
 // ReadSMS retrieves SMS text from inbox memory by ID.
 func (s *SIM900) ReadSMS(id string) (msg string, err error) {
 	// Set message format
