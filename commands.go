@@ -3,6 +3,7 @@ package sim900
 // AT commands
 const (
 	CMD_AT             string = "AT"
+	CMD_ATE            string = "ATE%d"
 	CMD_OK             string = "(^OK$)"
 	CMD_ERROR          string = "(^ERROR$)"
 	CMD_CMGF           string = "AT+CMGF?"

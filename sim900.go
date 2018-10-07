@@ -47,6 +47,20 @@ func (sim *SIM900) Disconnect() error {
 	return sim.port.Close()
 }
 
+// Ignore response
+func (sim *SIM900) ignoreReponse(cmd string, timeout time.Duration) (error) {
+	// Send command
+	if err := sim.port.Println(cmd); err != nil {
+		return err
+	}
+	// ignore
+	_, err := sim.port.ReadLine()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (sim *SIM900) wait4response(cmd, expected string, timeout time.Duration) (string, error) {
 	// Send command
 	if err := sim.port.Println(cmd); err != nil {
@@ -127,6 +141,19 @@ func (s *SIM900) DeleteSMS(id string) error {
 // Ping modem
 func (s *SIM900) Ping() error {
 	_, err := s.wait4response(CMD_AT, CMD_OK, time.Second*1)
+	return err
+}
+
+
+// Modem echo
+func (s *SIM900) Echo(enable bool) error {
+	var cmd string
+	if enable {
+		cmd = fmt.Sprintf(CMD_ATE, 1)
+	} else {
+		cmd = fmt.Sprintf(CMD_ATE, 0)
+	}
+	_, err := s.wait4response(cmd, "OK", time.Second*1)
 	return err
 }
 
