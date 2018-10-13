@@ -123,11 +123,13 @@ func (s *SIM900) ReadAllSMS() (msg string, err error) {
 	}
 	// Send command
 	cmd := fmt.Sprintf(CMD_CMGL_ALL)
-	if _, err := s.wait4response(cmd, CMD_CMGR_REGEXP, time.Second*5); err != nil {
+	if messages, err := s.wait4response(cmd, CMD_CMGL_ALL_REGEXP, time.Second*5); err != nil {
 		return "", err
+	} else {
+		return messages, nil
 	}
 	// Reading succesful get message data
-	return s.port.ReadLine()
+	//return s.port.ReadLine()
 }
 
 // Request a USSD message
