@@ -4,6 +4,11 @@ package sim900
 const (
 	CMD_AT             string = "AT"
 	CMD_ATE            string = "ATE%d"
+	CMD_ATD            string = "ATD%s;"
+	CMD_ATA            string = "ATA"
+	CMD_ATH            string = "ATH"
+	CMD_RING           string = "RING"
+	CMD_NO_CARRIER     string = "NO CARRIER"
 	CMD_OK             string = "(^OK$)"
 	CMD_ERROR          string = "(^ERROR$)"
 	CMD_CMGF           string = "AT+CMGF?"

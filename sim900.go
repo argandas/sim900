@@ -128,8 +128,6 @@ func (s *SIM900) ReadAllSMS() (msg string, err error) {
 	} else {
 		return messages, nil
 	}
-	// Reading succesful get message data
-	//return s.port.ReadLine()
 }
 
 // Request a USSD message
@@ -141,7 +139,6 @@ func (s *SIM900) RequestCUSD(short string) (msg string, err error) {
 	} else {
 		return response, nil
 	}
-	// Reading succesful get message data
 }
 
 // ReadSMS retrieves SMS text from inbox memory by ID.
@@ -165,6 +162,45 @@ func (s *SIM900) DeleteSMS(id string) error {
 	cmd := fmt.Sprintf(CMD_CMGD, id)
 	_, err := s.wait4response(cmd, CMD_OK, time.Second*1)
 	return err
+}
+
+// passthrough
+func (s *SIM900) CustomAT(command string) (string, error) {
+	// Send command
+	if response, err := s.wait4response(command, "(?m)(^[+][\\s\\S]*^OK|ERROR$)", time.Second*5); err != nil {
+	//if response, err := s.wait4response(command, "(?m)(^[+|.*][\\s\\S]*^OK|ERROR|^\\w.*$)", time.Second*5); err != nil {
+		return "", err
+	} else {
+		return response, nil
+	}
+}
+
+
+// call
+func (s *SIM900) Dial(number string, seconds int) (string, error) {
+	cmd := fmt.Sprintf(CMD_ATD, number)
+	if response, err := s.wait4response(cmd, CMD_CUSD_REGEXP, time.Second*time.Duration(seconds)); err != nil {
+		return "", err
+	} else {
+		return response, nil
+	}
+}
+
+// wait for call
+func (s *SIM900) WaitForCall(seconds int) (string, error) {
+	if _, err := s.wait4response("", CMD_RING, time.Second*30); err != nil {
+		return "NO INCOMMG CALL", err
+	}
+	if _, err := s.wait4response(CMD_ATA, CMD_OK, time.Second*1); err != nil {
+		return "", err
+	}
+	fmt.Println("call for ", seconds, "seconds")
+	time.Sleep(time.Duration(seconds) * time.Second)
+	if _, err := s.wait4response(CMD_ATH, CMD_NO_CARRIER, time.Second*1); err != nil {
+		return "", err
+	} else {
+		return "OK", nil
+	}
 }
 
 // Ping modem
