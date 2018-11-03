@@ -164,7 +164,7 @@ func (s *SIM900) DeleteSMS(id string) error {
 	return err
 }
 
-// passthrough
+// Directly pass AT command
 func (s *SIM900) CustomAT(command string) (string, error) {
 	// Send command
 	if response, err := s.wait4response(command, "(?m)(^[+][\\s\\S]*^OK|ERROR$)", time.Second*5); err != nil {
@@ -175,6 +175,25 @@ func (s *SIM900) CustomAT(command string) (string, error) {
 	}
 }
 
+// Pass command and expected response
+func (s *SIM900) CustomCmd(command string, response string, seconds float32) (string, error) {
+	// Send command
+	if response, err := s.wait4response(command, response,  time.Second*time.Duration(seconds)); err != nil {
+		return "", err
+	} else {
+		return response, nil
+	}
+}
+
+// Download file section
+func (s *SIM900) DownloadFile(command string, response string, seconds float32) (string, error) {
+	// Send command
+	if response, err := s.wait4response(command, response, time.Second*time.Duration(seconds)); err != nil {
+		return "", err
+	} else {
+		return response, nil
+	}
+}
 
 // call
 func (s *SIM900) Dial(number string, seconds int) (string, error) {
