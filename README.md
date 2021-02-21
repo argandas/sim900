@@ -27,11 +27,11 @@ import "github.com/argandas/sim900"
 
 func main() {
 	gsm := sim900.New()
-	err := gsm.Setup("COM1", 9600)
+	err := gsm.Connect("COM1", 9600)
 	if err != nil {
 		panic(err)
 	}
-	defer gsm.Teardown()
+	defer gsm.Disconnect()
 	phoneNumber := "XXXXXXXXXX" // The number to send the SMS
 	gsm.SendSMS(phoneNumber, "Hello World!")
 }
