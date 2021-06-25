@@ -3,6 +3,12 @@ package sim900
 // AT commands
 const (
 	CMD_AT             string = "AT"
+	CMD_ATE            string = "ATE%d"
+	CMD_ATD            string = "ATD%s;"
+	CMD_ATA            string = "ATA"
+	CMD_ATH            string = "ATH"
+	CMD_RING           string = "RING"
+	CMD_NO_CARRIER     string = "NO CARRIER"
 	CMD_OK             string = "(^OK$)"
 	CMD_ERROR          string = "(^ERROR$)"
 	CMD_CMGF           string = "AT+CMGF?"
@@ -16,8 +22,12 @@ const (
 	CMD_CMGR           string = "AT+CMGR=%s"
 	CMD_CMGR_REGEXP    string = "(^[+]CMGR[:] .*)"
 	CMD_CMGR_RX        string = "+CMGR: "
+	CMD_CMGL_ALL       string = "AT+CMGL=\"ALL\""
+	CMD_CMGL_ALL_REGEXP string = "(?m)((^[+]CMGL[:] [0-9]+,[\\s\\S:]*?.*?)OK)"
 	CMD_CMTI_REGEXP    string = "(^[+]CMTI[:] \"SM\",[0-9]+$)"
 	CMD_CMTI_RX        string = "+CMTI: \"SM\","
+	CMD_CUSD           string = "AT+CUSD=1,\"%s\",15"
+	CMD_CUSD_REGEXP    string = "(?m)(^[+]CUSD[:] [0-9]+,[| ]\"[\\s\\S:]*?.*?\", [0-9]+)"
 )
 
 // SMS Message Format
